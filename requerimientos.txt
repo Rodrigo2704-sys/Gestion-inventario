@@ -1,361 +1,67 @@
-# Documento de Requerimientos
+REQUERIMIENTOS DEL SISTEMA DE INVENTARIO
 
-## Sistema de Control de Inventario y Ventas — Mini-ERP
 
-**Versión:** 1.0
-**Tipo de sistema:** Aplicación web Full Stack
-**Arquitectura:** Frontend, API REST y base de datos relacional
 
-## 1. Descripción del proyecto
+1. Módulo de Autenticación y Usuarios
 
-El sistema permitirá a una pequeña empresa administrar sus productos, categorías, proveedores, existencias, ventas y usuarios desde una única aplicación web.
+- Registro e Inicio de Sesión: Autenticación mediante tokens JWT.
 
-El objetivo es controlar las entradas y salidas de inventario, registrar ventas, consultar el historial de operaciones y generar reportes básicos para facilitar la administración del negocio.
+- Roles de Usuario (RBAC):
 
-El sistema se desarrollará con React para el frontend, FastAPI para el backend y SQLAlchemy para la gestión de la base de datos. Se utilizará PostgreSQL como opción recomendada, aunque se puede adaptar a MySQL.
+  * Administrador: Acceso total (crear, editar, eliminar productos, gestionar usuarios y ver reportes).
 
-El proyecto también incorporará autenticación, autorización por roles, pruebas automatizadas y controles de seguridad desde el inicio.
+  * Empleado/Auxiliar: Restringido únicamente a registrar entradas y salidas de mercancía y consultar el stock.
 
-## 2. Objetivos
 
-### Objetivo general
 
-Desarrollar una aplicación web que permita administrar inventario y ventas de forma consistente, segura y verificable.
+2. Módulo de Gestión de Productos (CRUD)
 
-### Objetivos específicos
+- Atributos del Producto:
 
-* Registrar y administrar productos, categorías y proveedores.
-* Controlar las entradas y salidas de existencias.
-* Registrar ventas con uno o varios productos.
-* Calcular los totales en el backend.
-* Evitar ventas que superen el inventario disponible.
-* Administrar usuarios con diferentes niveles de acceso.
-* Consultar el historial de ventas y movimientos de inventario.
-* Generar reportes de ventas y productos con stock bajo.
-* Incorporar pruebas automatizadas para verificar el funcionamiento y la seguridad del sistema.
+  * Código/SKU (único).
 
-## 3. Actores y roles del sistema
+  * Nombre y Descripción.
 
-El sistema tendrá tres roles principales.
+  * Categoría (ej. Electrónica, Ropa, Alimentos).
 
-### 3.1. Administrador
+  * Precio de Compra y Precio de Venta.
 
-Será responsable de la configuración y administración general.
+  * Stock Actual, Stock Mínimo y Stock Máximo.
 
-Podrá:
+- Funcionalidades:
 
-* Crear, consultar, modificar y desactivar productos.
-* Administrar categorías y proveedores.
-* Registrar entradas de inventario y consultar todos los movimientos.
-* Consultar todas las ventas y sus detalles.
-* Consultar reportes de ventas e inventario.
-* Crear, consultar, modificar y desactivar usuarios.
-* Asignar roles a los usuarios.
-* Consultar el historial de auditoría disponible.
+  * Crear, editar, desactivar o eliminar productos.
 
-### 3.2. Vendedor
+  * Listado con paginación, filtros por categoría y barra de búsqueda por nombre o SKU.
 
-Será responsable de registrar las ventas.
 
-Podrá:
 
-* Consultar los productos activos y sus precios.
-* Consultar las existencias disponibles.
-* Registrar ventas de uno o varios productos.
-* Consultar las ventas que esté autorizado a visualizar.
-* Consultar el detalle de sus ventas.
+3. Módulo de Movimientos (Entradas y Salidas)
 
-No podrá:
+- Registro de Entradas:
 
-* Cambiar su propio rol.
-* Administrar usuarios.
-* Registrar entradas de inventario.
-* Modificar directamente las existencias.
-* Cambiar el precio de un producto sin autorización.
-* Acceder a funciones exclusivas del administrador.
+  * Incrementar el stock al recibir mercancía de proveedores.
 
-### 3.3. Encargado de inventario
+  * Guardar fecha, cantidad, costo unitario y nota u observación.
 
-Será responsable de mantener actualizadas las existencias.
+- Registro de Salidas:
 
-Podrá:
+  * Disminuir el stock por concepto de venta, pérdida o retiro.
 
-* Consultar los productos y sus existencias.
-* Registrar entradas de inventario.
-* Consultar los movimientos de inventario.
-* Administrar productos, categorías y proveedores si tiene ese permiso.
-* Consultar reportes de stock bajo.
+  * Validación de seguridad: Bloquear y no permitir salidas si el stock actual es menor a la cantidad solicitada.
 
-No podrá:
+- Historial y Auditoría: Tabla de registros que guarde qué usuario realizó cada movimiento, qué producto y en qué fecha exacta.
 
-* Administrar roles y permisos.
-* Modificar las ventas de otros usuarios sin autorización.
-* Acceder a funciones administrativas que no le correspondan.
 
-Los permisos deberán comprobarse en el backend. Ocultar botones en React no será suficiente para impedir el acceso.
 
-## 4. Requerimientos funcionales
+4. Módulo de Alertador y Reportes
 
-### Módulo 1. Autenticación y usuarios
+- Alerta de Stock Bajo: Notificación o indicador visual dinámico (color rojo o amarillo) en la interfaz cuando el stock actual sea menor o igual al stock mínimo (Stock Actual <= Stock Mínimo).
 
-**RF-001. Inicio de sesión:** el sistema permitirá iniciar sesión con credenciales válidas.
+- Dashboard y Métricas:
 
-**RF-002. Cierre de sesión:** el sistema permitirá cerrar la sesión de acuerdo con la estrategia de autenticación seleccionada.
+  * Cálculo del valor total del inventario (Stock Actual * Precio de Compra).
 
-**RF-003. Control de acceso:** cada petición protegida comprobará la identidad del usuario y sus permisos.
+  * Contador del total de productos registrados.
 
-**RF-004. Gestión de usuarios:** el administrador podrá crear, consultar, actualizar y desactivar usuarios.
-
-**RF-005. Asignación de roles:** el administrador podrá asignar los roles permitidos.
-
-**RF-006. Protección de contraseñas:** las contraseñas se almacenarán mediante un algoritmo de hash apropiado, nunca en texto plano.
-
-**RF-007. Protección de acceso:** se limitarán los intentos de autenticación y se evitará revelar información innecesaria sobre las cuentas.
-
-### Módulo 2. Productos y categorías
-
-**RF-008. Registro de productos:** el sistema permitirá crear productos con los siguientes datos:
-
-* Código o SKU único.
-* Nombre.
-* Descripción opcional.
-* Categoría.
-* Precio de venta.
-* Cantidad disponible.
-* Stock mínimo.
-* Estado: activo o inactivo.
-
-**RF-009. Consulta de productos:** se podrán consultar los productos mediante una tabla con paginación.
-
-**RF-010. Edición de productos:** los usuarios autorizados podrán modificar los campos permitidos.
-
-**RF-011. Desactivación:** un producto que tenga ventas o movimientos históricos podrá desactivarse sin eliminar su historial.
-
-**RF-012. Gestión de categorías:** los usuarios autorizados podrán crear, consultar, modificar y desactivar categorías.
-
-**RF-013. Búsqueda y filtros:** el sistema permitirá buscar productos por nombre o código y filtrar por categoría y estado.
-
-**RF-014. Validaciones:** no se permitirán precios negativos, códigos duplicados ni datos obligatorios vacíos.
-
-### Módulo 3. Proveedores
-
-**RF-015. Registro de proveedores:** se podrán almacenar nombre, identificación fiscal cuando corresponda, contacto, teléfono, correo y estado.
-
-**RF-016. Gestión de proveedores:** los usuarios autorizados podrán consultar, crear, modificar y desactivar proveedores.
-
-**RF-017. Asociación con entradas:** cada entrada de inventario podrá asociarse a un proveedor cuando se conozca su procedencia.
-
-### Módulo 4. Entradas y movimientos de inventario
-
-**RF-018. Registro de entradas:** el encargado autorizado podrá registrar la entrada de uno o varios productos.
-
-**RF-019. Actualización de existencias:** las entradas aprobadas incrementarán el stock disponible.
-
-**RF-020. Registro de movimientos:** cada entrada o salida producirá un movimiento de inventario que permita consultar:
-
-* Producto.
-* Tipo de movimiento.
-* Cantidad.
-* Fecha y hora.
-* Usuario responsable.
-* Referencia a la operación relacionada.
-* Observación opcional.
-
-**RF-021. Consulta de movimientos:** se podrá consultar el historial por producto, tipo de movimiento, usuario y fecha.
-
-**RF-022. Integridad del inventario:** los movimientos confirmados no podrán modificarse silenciosamente. Las correcciones deberán realizarse mediante operaciones registradas de ajuste o reversión autorizada.
-
-### Módulo 5. Ventas
-
-**RF-023. Registro de ventas:** el vendedor podrá seleccionar uno o varios productos, indicar las cantidades y registrar una venta.
-
-**RF-024. Cálculo del total:** el backend calculará los subtotales y el total usando los precios válidos almacenados en el servidor. No confiará en los totales enviados por React.
-
-**RF-025. Validación de existencias:** no se permitirá confirmar una venta que exceda el stock disponible.
-
-**RF-026. Detalle de venta:** cada venta conservará los productos, cantidades, precios unitarios aplicados y subtotales correspondientes al momento de la operación.
-
-**RF-027. Confirmación de venta:** al confirmar una venta, el sistema registrará la operación, descontará las existencias y guardará los movimientos correspondientes.
-
-**RF-028. Integridad transaccional:** el registro de la venta, sus detalles y los cambios de inventario deberán completarse en una misma transacción de base de datos. Si una parte falla, la operación no deberá quedar parcialmente aplicada.
-
-**RF-029. Historial de ventas:** se podrán consultar las ventas mediante filtros por fechas, usuario y estado.
-
-**RF-030. Detalle de venta:** los usuarios autorizados podrán consultar los productos y los valores de cada venta.
-
-**RF-031. Cancelación:** las cancelaciones, cuando se habiliten, requerirán autorización y generarán movimientos compensatorios de inventario. No se eliminarán ventas confirmadas de manera silenciosa.
-
-### Módulo 6. Reportes
-
-**RF-032. Reporte de ventas:** el sistema mostrará las ventas por un intervalo de fechas.
-
-**RF-033. Productos más vendidos:** se podrá consultar la cantidad vendida por producto en un período determinado.
-
-**RF-034. Stock bajo:** el sistema identificará productos cuya existencia sea igual o inferior al stock mínimo configurado.
-
-**RF-035. Historial de inventario:** se podrán consultar las entradas y salidas por período.
-
-**RF-036. Paginación y filtros:** las tablas de resultados permitirán filtrar y paginar los registros desde el backend.
-
-**RF-037. Visualización estadística:** opcionalmente, el frontend mostrará gráficos de ventas y stock bajo.
-
-## 5. Reglas de negocio
-
-**RN-001. Stock no negativo:** el sistema no permitirá que una operación deje existencias negativas.
-
-**RN-002. Precio confiable:** el precio aplicado a una venta lo determinará el backend según la política de precios vigente.
-
-**RN-003. Totales confiables:** el backend recalculará todos los importes de la venta.
-
-**RN-004. Consistencia de venta:** una venta y sus movimientos de inventario deben confirmarse juntos o revertirse juntos.
-
-**RN-005. Concurrencia:** si dos vendedores intentan comprar las últimas unidades al mismo tiempo, la base de datos y la lógica transaccional deberán impedir que se venda más de lo disponible.
-
-**RN-006. Historial:** las ventas confirmadas y los movimientos de inventario conservarán su trazabilidad.
-
-**RN-007. Permisos mínimos:** cada usuario podrá realizar solamente las operaciones autorizadas para su rol.
-
-**RN-008. Desactivación:** los productos y usuarios asociados a registros históricos deberán desactivarse en lugar de eliminarse cuando la eliminación rompa la integridad o trazabilidad.
-
-**RN-009. Precisión monetaria:** los precios y totales utilizarán un tipo decimal apropiado. No se utilizarán números de punto flotante binario para los cálculos monetarios.
-
-**RN-010. Idempotencia frente a reintentos:** el diseño deberá evitar que repetir accidentalmente la confirmación de una misma operación duplique la venta. Se definirá una estrategia adecuada cuando se implemente el flujo de confirmación.
-
-## 6. Requerimientos no funcionales
-
-### Seguridad
-
-**RNF-001.** Las contraseñas se almacenarán como hashes seguros.
-
-**RNF-002.** Las rutas protegidas validarán autenticación y autorización en el servidor.
-
-**RNF-003.** Se utilizarán consultas parametrizadas mediante SQLAlchemy u otros mecanismos equivalentes adecuados.
-
-**RNF-004.** Los datos de entrada se validarán mediante Pydantic y restricciones de base de datos cuando corresponda.
-
-**RNF-005.** Se establecerán límites apropiados para los intentos de autenticación, el tamaño de las peticiones y las operaciones costosas.
-
-**RNF-006.** Los secretos y credenciales no se subirán al repositorio Git.
-
-**RNF-007.** En producción se utilizará HTTPS y una configuración apropiada de las cookies, cabeceras y CORS según la arquitectura.
-
-**RNF-008.** Los mensajes de error no expondrán contraseñas, tokens, consultas SQL ni trazas internas.
-
-**RNF-009.** Las acciones sensibles se registrarán sin almacenar contraseñas, tokens ni información personal innecesaria.
-
-### Rendimiento y usabilidad
-
-**RNF-010.** Las tablas con muchos registros utilizarán paginación del lado del servidor.
-
-**RNF-011.** Las búsquedas y filtros no deberán exigir cargar todos los datos en el navegador.
-
-**RNF-012.** La interfaz mostrará estados de carga, confirmaciones y mensajes de error comprensibles.
-
-**RNF-013.** El sistema tendrá una estructura de código modular y mantenible.
-
-### Mantenimiento y calidad
-
-**RNF-014.** El proyecto incluirá documentación para instalarlo y ejecutarlo.
-
-**RNF-015.** Las modificaciones del esquema de base de datos se gestionarán mediante migraciones.
-
-**RNF-016.** Las funciones importantes contarán con pruebas automatizadas.
-
-**RNF-017.** Se mantendrá un repositorio Git con commits claros y configuración de dependencias reproducible.
-
-**RNF-018.** El proyecto podrá incorporar un pipeline de CI/CD para ejecutar pruebas y análisis de seguridad.
-
-## 7. Modelo de datos inicial
-
-La base de datos partirá de las siguientes entidades:
-
-* **Rol:** define los roles disponibles.
-* **Usuario:** almacena los datos de cuenta y la relación con su rol.
-* **Categoría:** agrupa los productos.
-* **Proveedor:** registra las empresas o personas proveedoras.
-* **Producto:** contiene SKU, nombre, categoría, precio, stock, stock mínimo y estado.
-* **EntradaInventario:** representa una operación de entrada.
-* **DetalleEntrada:** identifica los productos y las cantidades de cada entrada.
-* **Venta:** contiene fecha, vendedor, estado y total.
-* **DetalleVenta:** conserva el producto, cantidad, precio unitario y subtotal de cada línea.
-* **MovimientoInventario:** registra entradas, salidas y ajustes con trazabilidad.
-* **RegistroAuditoría:** registra las operaciones sensibles que se decida auditar.
-
-Relaciones principales:
-
-* Un rol puede estar asociado a muchos usuarios.
-* Una categoría puede agrupar muchos productos.
-* Un proveedor puede estar asociado a muchas entradas de inventario.
-* Una entrada puede contener varios detalles.
-* Una venta puede contener varios detalles.
-* Un producto puede aparecer en múltiples detalles de venta.
-* Un producto puede tener muchos movimientos de inventario.
-* Un usuario puede registrar múltiples ventas y operaciones de inventario.
-
-Las existencias pueden almacenarse en el producto para facilitar las consultas, pero deben mantenerse consistentes con los movimientos de inventario mediante operaciones transaccionales.
-
-## 8. Tecnologías propuestas
-
-### Frontend
-
-* React.
-* Vite.
-* JavaScript moderno.
-* CSS.
-* Una librería de gráficos opcional, como Chart.js.
-
-### Backend
-
-* Python.
-* FastAPI.
-* Pydantic.
-* SQLAlchemy.
-* Alembic.
-
-### Base de datos
-
-* PostgreSQL como opción recomendada.
-* MySQL como alternativa válida si se decide mantener esa tecnología.
-
-### Calidad y seguridad
-
-* pytest.
-* FastAPI TestClient.
-* Playwright.
-* Git y GitHub.
-* GitHub Actions.
-* Herramientas de análisis de dependencias y código.
-
-## 9. Criterios de aceptación del proyecto
-
-El proyecto se considerará funcional cuando se pueda demostrar que:
-
-1. Los usuarios pueden iniciar sesión y las rutas protegidas exigen autenticación.
-2. Los permisos impiden que un vendedor acceda a funciones administrativas.
-3. Los productos y proveedores pueden gestionarse mediante las operaciones autorizadas.
-4. Una entrada de inventario actualiza las existencias y registra su movimiento.
-5. Una venta con varios productos calcula correctamente su total.
-6. Una venta confirmada descuenta las existencias de forma consistente.
-7. Una venta que excede el stock se rechaza.
-8. Las peticiones simultáneas no permiten vender más unidades de las disponibles.
-9. Los reportes y filtros devuelven resultados correctos para el período solicitado.
-10. Las pruebas automatizadas comprueban escenarios válidos, errores y accesos no autorizados.
-11. El repositorio no contiene secretos de configuración.
-12. Existe documentación suficiente para instalar, ejecutar, probar y comprender el proyecto.
-
-## 10. Alcance de la primera versión
-
-La primera versión se concentrará en productos, categorías, usuarios, roles, entradas de inventario, ventas, historial, filtros y reportes básicos.
-
-Se dejarán para versiones posteriores, si resultan necesarias:
-
-* Integración con pasarelas de pago.
-* Facturación electrónica.
-* Devoluciones y reembolsos avanzados.
-* Lectores de códigos de barras.
-* Múltiples sucursales y almacenes.
-* Compras automatizadas.
-* Notificaciones en tiempo real.
-* Gráficos estadísticos avanzados.
-
-La prioridad será construir una aplicación consistente, probar sus reglas de negocio y asegurar sus operaciones críticas antes de añadir funcionalidades más complejas.
+  * Gráfico analítico de los 5 productos con mayor movimiento o rotación
