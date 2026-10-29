@@ -5,3 +5,5 @@ const PAGINA_LOGIN = "login.html";
 function obtenerToken() {
     return localStorage.getItem("token");
 }
+
+holalalal
