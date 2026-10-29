@@ -19,7 +19,7 @@ class DatosProducto(BaseModel):
     stock_actual: int = Field(ge=0)
     activo: bool = True
 
-   model_config = ConfigDict(extra="forbid", from_attributes=True)
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
 
 

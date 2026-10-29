@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import LOGIN_BLOQUEO_MINUTOS, LOGIN_MAX_INTENTOS
-from app.core.roles import Rol
+from app.core.roles import rol
 from app.core.security import hash_password, verificar_contraseña
 from app.models.usuarios import UsuariosModel, ahora_utc
 from app.schemas.usuarios import EntradaRegistro
@@ -21,8 +21,8 @@ class RolInvalido(Exception):
 
 CAMPOS_EDITABLES = {"nombre", "correo", "activo"}
 
-HASH_FALSO = hash_password("hash-falso-para-igualar-tiempos")
-
+# En app/crud/usuarios.py (en lugar de invocar hash_password() al arrancar)
+HASH_FALSO = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
 
 def normalizar_correo(correo: str) -> str:
     return correo.strip().lower()
@@ -99,7 +99,7 @@ def iniciar_sesion(db: Session, correo: str, contraseña_ingresada: str):
         verificar_contraseña(contraseña_ingresada, HASH_FALSO)
         return None
     
-    if not verificar_contraseña(contraseña_ingresada, HASH_FALSO):
+    if not verificar_contraseña(contraseña_ingresada, usuario.password):
         _registrar_fallo(db, usuario)
         return None
     
@@ -113,10 +113,10 @@ def iniciar_sesion(db: Session, correo: str, contraseña_ingresada: str):
 def registrar_usuario(db: Session, usuario: EntradaRegistro):
     # Ese bloque de código por sí solo solo prepara el paquete en la memoria RAM de tu servidor.
     db_usuario = UsuariosModel(
-        nombre=usuario.nombre,
+        Nombre=usuario.nombre,
         correo=normalizar_correo(usuario.correo),
         password=hash_password(usuario.password),
-        rol_id=int(Rol.Empleado.value),
+        rol_id=int(rol.Empleado.value),
     )
 
     try:

@@ -7,10 +7,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
 
+from app.core.security import crear_token
 from app.core.database import get_db
 from app.core.dependencias import rol, obtener_usuario_actual, solo_administradores
 from app.core.limiter import limiter
-from app.core.security import crear_token_acceso
+from app.core.security import crear_token
 from app.crud.verificacion import PROPOSITO_VERIFICAR
 from app.crud.usuarios import (
     CorreoYaRegistrado,
@@ -62,16 +63,16 @@ def login(
             detail="Debes verificar tu correo electronico antes de iniciar sesion."
         )
 
-    nombre_rol = usuario.rol.nombre
+    nombre_rol = usuario.rol.Nombre
 
-    acceso_token = crear_token_acceso(
+    acceso_token = crear_token(
         datos={"sub": str(usuario.id), "rol": nombre_rol, "token_version": usuario.token_version}
     )
 
     return {
-        "acceso_token": acceso_token,
+        "access_token": acceso_token,
         "token_type": "bearer",
-        "nombre": usuario.nombre,
+        "nombre": usuario.Nombre,
         "rol": nombre_rol,
     }
 

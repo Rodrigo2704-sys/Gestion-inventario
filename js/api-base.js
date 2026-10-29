@@ -6,8 +6,3 @@ function obtenerToken() {
     return localStorage.getItem("token");
 }
 
-holalalald
-DataTransferdsad
-addEventListenerdsadsad
-asd
-sad

@@ -36,15 +36,17 @@ def _validar_bytes_password(contraseña: str) -> str:
 
 class RolSalida(BaseModel):
     id: int
-    nombre: str
+    Nombre: str
     #Lo pones cada vez que tu endpoint vaya a retornar un objeto que sacaste de la base de datos y quieras que Pydantic lo empaquete y lo convierta a JSON automáticamente para enviárselo al usuario.
     model_config = ConfigDict(from_attributes=True)
 
 
-class DatosUsuario(BaseModel):
-    nombre: str
-    correo: EmailStr
+from pydantic import AliasChoices, Field  # Asegúrate de importar Field si no lo tienes
 
+
+class DatosUsuario(BaseModel):
+    nombre: str = Field(validation_alias=AliasChoices("nombre", "Nombre"))
+    correo: EmailStr
 
 class EntradaRegistro(DatosUsuario):
     nombre: Nombre

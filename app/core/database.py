@@ -12,11 +12,12 @@ DB_PASSWORD=os.getenv("DB_PASSWORD","")
 DB_NAME=os.getenv("DB_NAME","GestionVentas")
 DB_PORT=int(os.getenv("DB_PORT",3306))
 
-DATABASE_URL=Url.create(
-    drivername="mysql+mysqlconnector",
+DATABASE_URL=URL.create(
+    drivername="mysql+pymysql",
     username=DB_USER,
     password=DB_PASSWORD,
     host=DB_HOST,
+    port=DB_PORT,
     database=DB_NAME,
     query={"charset":"utf8mb4"},
 )

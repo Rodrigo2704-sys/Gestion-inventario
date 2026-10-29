@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
 from app.core.dependencias import obtener_usuario_actual, solo_administradores
-from app.crud.usuarios import (
+from app.core.database import get_db
+from app.crud.productos import (
     ProductoYaRegistrado,
     ProductoNoEncontrado,
     StockInsuficiente,
@@ -20,10 +20,11 @@ from app.crud.usuarios import (
     Buscar_Producto_codigo 
 )
 
-from app.schemas.usuarios import (
+from app.schemas.productos import (
     DatosProducto,
     EntradaProducto,
     ActualizarProducto,
+    SalidaProducto,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,8 +32,8 @@ router = APIRouter(prefix="/productos", tags=["Productos"])
 
 @router.post("/registrar/producto", response_model=DatosProducto, status_code=status.HTTP_201_CREATED)
 def registrar_un_producto(
-    db: Session = Depends(get_db),
     datos: DatosProducto, 
+    db: Session = Depends(get_db),
     admin = Depends(solo_administradores)
 ): 
     try:
@@ -57,13 +58,12 @@ def registrar_un_producto(
 
 @router.post("/registrar/stock", status_code=status.HTTP_200_OK)
 def registrar_stock(
-    db: Session = Depends(get_db),
     datos: EntradaProducto,
+    db: Session = Depends(get_db),
     usuario = Depends(obtener_usuario_actual), 
 ):
     try:
         registrar_entrada_stock(db, datos)
-
     except ProductoNoEncontrado as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,27 +78,18 @@ def registrar_stock(
         )
     return {"Exito": True, "Mensaje": "Stock actualizado con éxito."}
 
-
-@router.post("/salida/stock",status_code=status.HTTP_200_OK)
+@router.post("/salida/stock", status_code=status.HTTP_200_OK)
 def salida_stock_producto(
-    db:session=Depends(get_db),
-    datos:SalidaProducto,
-    usuario_id:int,
-    permiso:obtener_usuario_actual
-
+    usuario_id: int,
+    datos: SalidaProducto,
+    db: Session = Depends(get_db),
+    usuario_actual = Depends(obtener_usuario_actual),
 ):
-
-   try:
-       registro_salida_stock(db,datos,usuario_id)
-
+    try:
+        registro_salida_stock(db, datos, usuario_id)
     except ProductoNoEncontrado as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except StockInsuficiente as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND, 
             detail=str(e)
         )
     except SQLAlchemyError:
@@ -108,9 +99,8 @@ def salida_stock_producto(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Hubo un error al registrar la salida del producto."
         )
-    return {"Exito:":True,"Mensaje":"Se ha registrado la salida del producto con exito!"}
-       
-
+    
+    return {"Exito": True, "Mensaje": "Se ha registrado la salida del producto con exito!"}
    
 
 @router.patch("/{codigo}/actualizar/producto", response_model=DatosProducto, status_code=status.HTTP_200_OK)
@@ -153,8 +143,8 @@ def actualizar_el_producto(
 
 @router.delete("/{codigo}/eliminar/producto", status_code=status.HTTP_200_OK)
 def eliminar_el_producto(
-    db: Session = Depends(get_db),
     codigo: str,
+    db: Session = Depends(get_db),
     admin = Depends(solo_administradores)
 ):
     try:
@@ -182,7 +172,7 @@ def buscar_los_productos_por_categoria(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=50),
-    permiso:obtener_usuario_actual
+    permiso= Depends(obtener_usuario_actual)
 ):
     return Buscar_producto_categoria(db, categoria=categoria, skip=skip, limit=limit)
 
@@ -191,7 +181,7 @@ def buscar_los_productos_por_categoria(
 def buscar_los_productos_por_codigo(
     codigo: str, 
     db: Session = Depends(get_db),
-    permiso:obtener_usuario_actual
+    permiso=Depends(obtener_usuario_actual)
 ):
     producto = Buscar_Producto_codigo(db, codigo=codigo)
     

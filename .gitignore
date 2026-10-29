@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# El archivo de variables de entorno (¡Muy importante que nunca se suba!)
+.env
+
+
+# Si quieres ignorar archivos de texto con pruebas de seguridad o requerimientos locales
+PruebasSeguridas.txt
+requerimientos.txt
+
+# El entorno virtual de Python
+venv/

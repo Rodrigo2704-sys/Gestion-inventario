@@ -63,12 +63,6 @@ def registrar_entrada_stock(db: Session, entrada_in: EntradaProducto):
         db.rollback()
         raise
 
-#
-  * Disminuir el stock por concepto de venta, pérdida o retiro.
-
-  * Validación de seguridad: Bloquear y no permitir salidas si el stock actual es menor a la cantidad solicitada.
-
-
 def registro_salida_stock(db: Session, datos: SalidaProducto, usuario_id: int):
     producto = db.query(ProductoModel).filter(ProductoModel.Codigo == datos.Codigo).first()
 
