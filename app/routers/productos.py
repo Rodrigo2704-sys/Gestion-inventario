@@ -17,7 +17,11 @@ from app.crud.productos import (
     actualizar_producto,
     eliminar_producto, 
     Buscar_producto_categoria,
-    Buscar_Producto_codigo 
+    Buscar_Producto_codigo ,
+    calcular_valor_inventario,
+    contar_productos,
+    obtener_productos_mas_vendidos
+
 )
 
 from app.schemas.productos import (
@@ -78,7 +82,7 @@ def registrar_stock(
         )
     return {"Exito": True, "Mensaje": "Stock actualizado con éxito."}
 
-@router.post("/salida/stock", status_code=status.HTTP_200_OK)
+@router.post("/{usuario_id}/salida/stock", status_code=status.HTTP_200_OK)
 def salida_stock_producto(
     usuario_id: int,
     datos: SalidaProducto,
@@ -177,7 +181,7 @@ def buscar_los_productos_por_categoria(
     return Buscar_producto_categoria(db, categoria=categoria, skip=skip, limit=limit)
 
 
-@router.get("/producto/{codigo}", response_model=DatosProducto)
+@router.get("/codigo/{codigo}", response_model=DatosProducto)
 def buscar_los_productos_por_codigo(
     codigo: str, 
     db: Session = Depends(get_db),
